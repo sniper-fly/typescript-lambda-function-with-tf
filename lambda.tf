@@ -1,23 +1,4 @@
-resource "terraform_data" "lambda_build" {
-  triggers_replace = [
-    for file in fileset(local.src_path, "{*.ts,package*.json}")
-    : filebase64("${local.src_path}/${file}")
-  ]
-  provisioner "local-exec" {
-    working_dir = local.src_path
-    command     = "npm install"
-    on_failure  = fail
-  }
-  provisioner "local-exec" {
-    working_dir = local.src_path
-    command     = "npm run build"
-    on_failure  = fail
-  }
-}
-
 data "archive_file" "lambda_package" {
-  depends_on = [terraform_data.lambda_build]
-
   type        = "zip"
   source_dir  = local.build_path
   output_path = local.package_path
