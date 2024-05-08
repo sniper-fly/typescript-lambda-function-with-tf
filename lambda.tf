@@ -14,25 +14,22 @@ resource "aws_lambda_function" "helloworld" {
 
 resource "aws_iam_role" "iam_for_lambda" {
   name = "role-for-sample-ts-lambda"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
 
-  assume_role_policy = <<-EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Action": "sts:AssumeRole",
-        "Principal": {
-          "Service": "lambda.amazonaws.com"
-        },
-        "Effect": "Allow",
-        "Sid": ""
-      }
-    ]
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
   }
-  EOF
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-  ]
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_policy" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 resource "null_resource" "lambda_build" {
@@ -44,10 +41,14 @@ resource "null_resource" "lambda_build" {
   }
 
   provisioner "local-exec" {
-    command = "cd ${local.src_path} && npm install"
+    working_dir = local.src_path
+    command     = "npm install"
+    on_failure  = fail
   }
   provisioner "local-exec" {
-    command = "cd ${local.src_path} && npm run build"
+    working_dir = local.src_path
+    command     = "npm run build"
+    on_failure  = fail
   }
 }
 
