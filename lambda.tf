@@ -1,10 +1,8 @@
-resource "null_resource" "lambda_build" {
-  triggers = {
-    code_diff = join("", [
-      for file in fileset(local.src_path, "{*.ts, package*.json}")
-      : filebase64("${local.src_path}/${file}")
-    ])
-  }
+resource "terraform_data" "lambda_build" {
+  triggers_replace = [
+    for file in fileset(local.src_path, "{*.ts,package*.json}")
+    : filebase64("${local.src_path}/${file}")
+  ]
   provisioner "local-exec" {
     working_dir = local.src_path
     command     = "npm install"
@@ -18,7 +16,7 @@ resource "null_resource" "lambda_build" {
 }
 
 data "archive_file" "lambda_package" {
-  depends_on = [null_resource.lambda_build]
+  depends_on = [terraform_data.lambda_build]
 
   type        = "zip"
   source_dir  = local.build_path
@@ -31,6 +29,7 @@ resource "aws_s3_object" "package" {
   bucket = aws_s3_bucket.lambda_assets.bucket
   key    = local.package_s3_key
   source = data.archive_file.lambda_package.output_path
+  etag   = filemd5(data.archive_file.lambda_package.output_path)
 }
 
 resource "aws_lambda_function" "helloworld" {
