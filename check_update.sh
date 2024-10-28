@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # ファイルのハッシュ値を計算しファイル出力するスクリプト
-function calc_hash() {
+function log_hash() {
   # 第一引数、第二引数が指定されていない場合はエラーを出力して終了
   if [ $# -ne 2 ]; then
-    echo "usage: calc_hash <directory> <output_file>"
+    echo "usage: log_hash <directory> <output_file>"
     exit 1
   fi
 
@@ -20,7 +20,7 @@ HASH_FILE=./sha256sum.txt
 TMP_FILE=./__tmp_sha256sum__.txt
 LAMBDA_DIR=./lambda
 
-calc_hash $LAMBDA_DIR $TMP_FILE
+log_hash $LAMBDA_DIR $TMP_FILE
 
 # sha265sum.txt が存在していて、且つ、ハッシュ値が同じ場合は何もしない
 if [ -e sha256sum.txt ] && cmp -s $HASH_FILE $TMP_FILE ; then
@@ -31,7 +31,13 @@ fi
 # 上の否定 = ( ハッシュが存在しない || ハッシュが違う )
 rm $TMP_FILE
 
-calc_hash $LAMBDA_DIR $HASH_FILE
+log_hash $LAMBDA_DIR $HASH_FILE
 cd $LAMBDA_DIR
 npm ci
-npm run build
+
+# ビルドが失敗した場合はハッシュファイルを削除して終了
+if ! npm run build; then
+  cd ..
+  rm $HASH_FILE
+  exit 1
+fi
