@@ -1,4 +1,5 @@
 import { Context, APIGatewayProxyResult, APIGatewayEvent } from "aws-lambda";
+import { scrapingTitle } from "./scrapingTitle";
 
 export const handler = async (
   event: APIGatewayEvent,
@@ -9,7 +10,8 @@ export const handler = async (
   return {
     statusCode: 200,
     body: JSON.stringify({
-      message: "hello world",
+      message: await scrapingTitle("https://example.com"),
+      // title: Example Domain
     }),
   };
 };
