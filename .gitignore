@@ -1,3 +1,5 @@
 .terraform
 terraform.tfstate*
 sha256sum.txt
+
+*.zip
