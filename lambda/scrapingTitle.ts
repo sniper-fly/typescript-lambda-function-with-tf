@@ -16,6 +16,9 @@ export async function scrapingTitle(url: string) {
   const page = await browser.newPage();
   await page.goto(url);
   const pageTitle = await page.title();
-  await browser.close();
+
+  if (process.env.NODE_ENV !== "production") {
+    await browser.close(); // lambdaだとエラーになってしまうのでコメントアウト
+  }
   return pageTitle;
 }
