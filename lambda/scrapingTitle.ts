@@ -1,5 +1,6 @@
 import { chromium as playwright } from "playwright-core";
 import chromium from "@sparticuz/chromium";
+import "dotenv/config";
 
 export async function scrapingTitle(url: string) {
   const browser = await playwright.launch({
