@@ -24,35 +24,9 @@ resource "aws_lambda_function" "helloworld" {
 
   role        = aws_iam_role.iam_for_lambda.arn
   runtime     = "nodejs20.x"
-  timeout     = "60"
-  memory_size = "600"
-
-  environment {
-    variables = {
-      NODE_ENV = "production"
-    }
-  }
-
-  layers = [aws_lambda_layer_version.chromium_layer.arn]
+  timeout     = "10"
 }
 
-resource "aws_s3_bucket" "chromium_upload_bucket" {}
-
-resource "aws_s3_object" "chromium_layer_zip" {
-  bucket = aws_s3_bucket.chromium_upload_bucket.bucket
-  key    = local.chromium_zip
-  source = local.chromium_layer_zip_path
-}
-
-resource "aws_lambda_layer_version" "chromium_layer" {
-  layer_name  = "chromium"
-  description = local.chromium_zip
-  s3_bucket   = aws_s3_bucket.chromium_upload_bucket.bucket
-  s3_key      = aws_s3_object.chromium_layer_zip.key
-
-  compatible_runtimes      = ["nodejs20.x"] # 必要なランタイムを指定
-  compatible_architectures = ["x86_64"]     # アーキテクチャを指定
-}
 resource "aws_iam_role" "iam_for_lambda" {
   name               = "role-for-sample-ts-lambda"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
